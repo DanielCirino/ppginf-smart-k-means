@@ -4,3 +4,6 @@ scikit-learn
 jupyterlab
 matplotlib
 seaborn
+plotly
+dash
+dash-bootstrap-components
