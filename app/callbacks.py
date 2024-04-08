@@ -1,62 +1,70 @@
-from dash.exceptions import PreventUpdate
-from dash import dcc, html, Input, Output, State
+import base64
+import io
 
-# Diretório onde os arquivos serão salvos
-UPLOAD_DIRECTORY = "../upload"
+import pandas as pd
+from dash import Input, Output, State, html
+
+from layout import section_upload
 
 
-# Função para registrar os callbacks
-def register_callbacks(app):
-    # Callback para atualizar o conteúdo da página com base na URL
+# Função para simular o processamento do arquivo
+def process_upload(contents, filename):
+    if contents is not None:
+        # Lê o conteúdo do arquivo como um DataFrame do Pandas
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string).decode('utf-8')
+
+        # Lê o conteúdo do arquivo como um DataFrame do Pandas
+        df = pd.read_csv(io.StringIO(decoded), sep=";")
+        return df
+
+
+def configurar_callbacks(app):
+    # Callback para carregar e exibir informações do arquivo
     @app.callback(
-        Output('page-content', 'children'),  # Adicionando a saída do callback ao elemento page-content
-        [Input('url', 'pathname')]
-    )
-    def display_page(pathname):
-        if pathname == '/page-1':
-            return html.H1('Conteúdo da Página 1')
-        elif pathname == '/page-2':
-            return html.H1('Conteúdo da Página 2')
-        else:
-            return [html.H2("Página Inicial"),
-                    html.P("Faça o upload de um arquivo:"),
-                    dcc.Upload(
-                        id='upload-data',
-                        children=html.Div([
-                            'Arraste e solte ou ',
-                            html.A('selecione um arquivo')
-                        ]),
-                        style={
-                            'width': '100%',
-                            'height': '60px',
-                            'lineHeight': '60px',
-                            'borderWidth': '1px',
-                            'borderStyle': 'dashed',
-                            'borderRadius': '5px',
-                            'textAlign': 'center',
-                            'margin': '10px'
-                        },
-                        # Permite o upload de múltiplos arquivos
-                        multiple=False
-                    ),
-                    html.Div(id='output-data-upload'),
-                    ]
-
-    # Callback para processar o upload de arquivos
-    @app.callback(
-        Output('output-data-upload', 'children'),
+        Output('upload-content', 'children'),
         [Input('upload-data', 'contents')],
-        [State('upload-data', 'filename'),
-         State('upload-data', 'last_modified')]
+        [State('upload-data', 'filename')]
     )
-    def update_output(list_of_contents, list_of_names, list_of_dates):
-        if list_of_contents is None:
-            raise PreventUpdate
+    def update_output(contents, filename):
+        if contents is None:
+            return section_upload
 
-        html_text = f'''
-            <h1>{list_of_names}</h1>
-            <p>Este é um exemplo de texto dinâmico com tags HTML gerado por um callback.</p>
-            <p>Valor atual do input: <strong>{list_of_contents}</strong></p>
-            '''
-        # Retorna a saída como HTML diretamente
-        return html.Div(dcc.Markdown(html_text))
+        if contents is not None:
+            df = process_upload(contents, filename)
+            num_lines, num_columns = df.shape
+
+            # Retorna o nome do arquivo e a quantidade de linhas
+            return html.Div([
+                html.Div(className="jumbotron", children=[
+                    html.H1("Detalhes Arquivo", className="display-4"),
+                    html.P(
+                        "Confira abaixo os detalhes do arquivo carregado.",
+                        className="lead"),
+                    html.Hr(className="my-4"),
+                    html.Div(
+                        [html.H5(f'Nome do Arquivo: {filename}'),
+                         html.H6(f'Quantidade de Linhas: {num_lines}'),
+                         html.Hr(className="my-4"),
+                         html.Table(className="table table-sm table-dark table-striped", children=[
+                             html.Thead(children=[html.Tr([html.Th("Variável"), html.Th("Excluir")])]),
+                             html.Tbody(
+                                 children=
+                                 [html.Tr(html.Td(col)) for col in df.columns]
+
+                             )
+                         ])
+                         ]
+                    ),
+
+                    html.Div(
+                        className="btn-group",
+                        children=[
+                            html.A("Voltar", className="btn btn-light btn-large mr-2", href="#"),
+                            html.A("Avançar", className="btn btn-primary btn-large ml-3", href="#")]
+                    ),
+
+                ]),
+            ])
+        else:
+            return html.Div()
