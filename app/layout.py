@@ -44,68 +44,106 @@ sidebar = html.Div([
 
 section_upload = html.Section(
     id="section-upload",
-    children=html.Div(id="upload-content", children=[
-        html.Div(html.Img(src="./assets/upload_icon.png", width="128 px")),
-        html.P(className="lead mt-3", children=["Qual é a melhor classificação para os seus dados?"]),
-        html.P(className="", children=["Faça um upload e vamos descobrir?"]),
+    children=[
         html.Div(
-            className="container, text-center",
+            id="detalhes-arquivo",
             children=[
-                dcc.Upload(
-                    id='upload-data',
-                    children=html.Div([
-                        'Arraste para cá ou ',
-                        html.A('clique para selecionar um arquivo')
+                html.Div(className="row", children=[
+                    html.Div(className="col-md-4 d-flex", children=[
+                        html.Div(className="card text-white bg-dark mb-3", children=[
+                            # html.Img(className="card-img-top", src="./assets/upload_icon.png", width="24px"),
+                            html.Div(className="card-body", children=[
+                                html.H5(className="card-title", children="Fazer upload"),
+                                html.P(className="card-text",
+                                       children="Qual a melhor classificação para os seus dados?"
+                                                "Faça um upload dos seus dados e descubra ;)")
+                            ]),
+                            html.Div(className="card-body", children=[
+                                html.Div(
+                                    className="row",
+                                    children=[
+                                        html.Div(className="col-md-12", children=[
+                                            dcc.Upload(
+                                                id='upload-data',
+                                                children=html.Div([
+                                                    html.A(' Arraste ou clique para selecionar um arquivo')
+                                                ]),
+                                                style={
+                                                    'width': '100%',
+                                                    'borderWidth': '1px',
+                                                    'borderStyle': 'dashed',
+                                                    'borderRadius': '10px',
+                                                    'textAlign': 'center',
+                                                    'padding': '5px 5px 5px 5px',
+                                                    'font-family': 'Courier New'
+                                                },
+                                                # Permite o upload de múltiplos arquivos
+                                                multiple=False
+                                            )
+                                        ]),
+                                    ])
+                            ])
+                        ])
                     ]),
-                    style={
-                        'width': '100%',
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '10px',
-                        'textAlign': 'center',
-                        'margin': '50px 10px 10px 10px',
-                        'font-family': 'Courier New'
-                    },
-                    # Permite o upload de múltiplos arquivos
-                    multiple=False
-                ),
+                    html.Div(
+                        className="col-md-4 d-flex",
+                        children=[
+                            html.Div(
+                                className="card text-white bg-dark mb-3",
+                                children=[
+
+                                    html.Div(className="card-body", children=[
+                                        html.H5(className="card-title", children="Detalhes do arquivo"),
+                                        html.P(
+                                            id="upload-details",
+                                            className="card-text",
+                                            children="Selecione um arquivo para ver os detalhes")
+                                    ]),
+
+                                ])
+                        ]),
+                    html.Div(className="col-md-4 d-flex", children=[
+                        html.Div(className="card text-white bg-dark mb-3", children=[
+                            # html.Div(className="card-header", children="Detalhes do Arquivo"),
+                            html.Div(className="card-body", children=[
+                                html.H5(className="card-title", children="Campos do dataset"),
+
+                                html.Div(
+                                    id="dataset-info",
+                                    children="Selecione um arquivo para ver os detalhes do dastaset."),
+                                html.Div(
+                                    id="dataset-action",
+                                    children="...")
+
+                            ]),
+
+                        ])
+                    ])
+                ])
+
             ]),
-        html.Div(
-            id='output-data-upload',
-            className="container mt-3",
-            children=[dbc.Progress(value=0, id="progress_bar"), ]),
-    ]), style={"min-height": "100vh"}
+    ], style={"min-height": "100vh"}  # Definindo altura para ocupar o tamanho da tela
 )
+
+section_result = html.Section(
+    id="section-result",
+    children=[
+        html.H3(className="mt-3", children="Resultado análise agrupamento"),
+        html.Hr(className="mt-3"),
+        html.Div(
+            id="section-result-content",
+            className="container mt-3",
+            children=[
+                html.P("Conteúdo da seção 2..."),
+            ])
+    ], style={"min-height": "100vh"})  # Definindo altura para ocupar o tamanho da tela
 
 conteudo = html.Div(
     className="container mt-3 ml-3 mr-3 ",
     children=[
         section_upload,
-        html.Section(id="section-1", children=[
-            html.Div(
-                id="detalhes-arquivo",
-                children=[
-                    html.Div(className="jumbotron", children=[
-                        html.H1("Hello word", className="display-4"),
-                        html.P(
-                            "This is a simple hero unit, a simple jumbotron-style component for calling extra attention to featured content or information.",
-                            className="lead"),
-                        html.Hr(className="my-4"),
-                        html.P(
-                            "It uses utility classes for typography and spacing to space content out within the larger container."),
-                        html.A("Voltar", className="btn btn-light btn-large", href="#"),
-                        html.A("Avançar", className="btn btn-primary btn-large", href="#")
-                    ])
-                ]),
-        ], style={"min-height": "100vh"}),  # Definindo altura para ocupar o tamanho da tela
-        html.Hr(),
-        # Seção 2
-        html.Div([
-            html.H2("Seção 2", id="section-2", className="display-5"),
-            html.P("Conteúdo da seção 2..."),
-        ], style={"min-height": "100vh"}),  # Definindo altura para ocupar o tamanho da tela
+        html.Br(),
+        section_result,
         html.Hr(),
         # Seção 3
         html.Div([

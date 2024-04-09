@@ -1,6 +1,7 @@
 import base64
 import io
 
+import dash
 import pandas as pd
 from dash import Input, Output, State, html
 
@@ -22,49 +23,54 @@ def process_upload(contents, filename):
 def configurar_callbacks(app):
     # Callback para carregar e exibir informações do arquivo
     @app.callback(
-        Output('upload-content', 'children'),
+        [Output('upload-details', 'children'),
+         Output('dataset-info', 'children'),
+         Output('dataset-action', 'children')],
         [Input('upload-data', 'contents')],
         [State('upload-data', 'filename')]
     )
     def update_output(contents, filename):
         if contents is None:
-            return section_upload
+            return dash.no_update, dash.no_update, dash.no_update
 
-        if contents is not None:
-            df = process_upload(contents, filename)
-            num_lines, num_columns = df.shape
+        df = process_upload(contents, filename)
+        num_lines, num_columns = df.shape
+        columns_types = zip(df.columns, df.dtypes)
 
-            # Retorna o nome do arquivo e a quantidade de linhas
-            return html.Div([
-                html.Div(className="jumbotron", children=[
-                    html.H1("Detalhes Arquivo", className="display-4"),
-                    html.P(
-                        "Confira abaixo os detalhes do arquivo carregado.",
-                        className="lead"),
-                    html.Hr(className="my-4"),
-                    html.Div(
-                        [html.H5(f'Nome do Arquivo: {filename}'),
-                         html.H6(f'Quantidade de Linhas: {num_lines}'),
-                         html.Hr(className="my-4"),
-                         html.Table(className="table table-sm table-dark table-striped", children=[
-                             html.Thead(children=[html.Tr([html.Th("Variável"), html.Th("Excluir")])]),
-                             html.Tbody(
-                                 children=
-                                 [html.Tr(html.Td(col)) for col in df.columns]
+        file_datails = f"""
+        O arquivo '{filename}' possui {num_lines} registros e {num_columns} colunas.
+        Os detalhes dos campos do arquivo podem ser observados ao lado."""
 
-                             )
-                         ])
-                         ]
-                    ),
+        # Retorna o nome do arquivo e a quantidade de linhas
+        dataset_info = [
+            html.P(className="card-text",
+                   children="Estes são os atributos presentes no arquivo com seus respectivos tipos."),
+            html.Ul(
+                className="list-group",
+                children=[
+                    html.Li(
+                        className="list-group-item list-group-item-dark",
+                        children=f"{i + 1}. '{col[0]}' [{col[1]}]")
+                    for i, col in enumerate(columns_types)]
+            )]
+        dataset_actions = html.A(
+            id="btn-process-dataset",
+            className="btn btn-primary mt-3",
+            href="#section-result",
+            children="Continuar",
+            n_clicks=0)
 
-                    html.Div(
-                        className="btn-group",
-                        children=[
-                            html.A("Voltar", className="btn btn-light btn-large mr-2", href="#"),
-                            html.A("Avançar", className="btn btn-primary btn-large ml-3", href="#")]
-                    ),
+        return file_datails, dataset_info, dataset_actions
 
-                ]),
-            ])
-        else:
-            return html.Div()
+    # Callback para voltar e carregar um novo arquivo ou prosseguir com o arquivo carregado
+    @app.callback(
+        Output('section-result-content', 'children'),
+        [Input('btn-process-dataset', 'n_clicks')]
+    )
+    def continue_with_file(n_clicks):
+        if n_clicks is None or n_clicks == 0:
+            return dash.no_update
+
+        # Adicione a lógica aqui para prosseguir com o arquivo carregado
+        return f"Clique realizado {n_clicks} vezes..."
+
