@@ -21,21 +21,14 @@ sidebar = html.Div([
                     html.A(
                         id="link-section-1",
                         className="nav-link",
-                        href="#section-1",
-                        children="Detalhes"
-                    ),
-
-                    html.A(
-                        id="link-section-2",
-                        className="nav-link ",
-                        href="#section-2",
-                        children="Seção 2"
+                        href="#section-result",
+                        children="Resultado"
                     ),
                     html.A(
                         id="link-section-3",
                         className="nav-link",
                         href="#section-3",
-                        children="Seção 3"
+                        children="Sobre"
                     )
                 ])
         ]),
@@ -134,7 +127,16 @@ section_result = html.Section(
             id="section-result-content",
             className="container mt-3",
             children=[
-                html.P("Conteúdo da seção 2..."),
+                html.P(id="count-click", children="Conteúdo da seção 2..."),
+                html.Div(className="row", children=[
+                    html.Div(className="col-md-6", children=[
+                        dcc.Graph(id="entropy-graph")
+                    ]),
+                    html.Div(className="col-md-6", children=[
+                        html.Div(id="iterate-summary")
+                    ])
+                ]),
+
             ])
     ], style={"min-height": "100vh"})  # Definindo altura para ocupar o tamanho da tela
 
@@ -171,5 +173,6 @@ def configurar_layout(app):
                 style={"color": "#ffffff", }
             )
         ]),
+        dcc.Store(id='data-store')
     ], className="container-fluid", style={"background-color": "#212121", "min-height": "100vh"}
     )

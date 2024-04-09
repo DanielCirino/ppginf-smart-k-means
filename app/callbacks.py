@@ -3,9 +3,11 @@ import io
 
 import dash
 import pandas as pd
-from dash import Input, Output, State, html
+from dash import Input, Output, State, html, dash_table
 
+from core.smart_k_means import obter_avaliacao_de_agrupamento
 from layout import section_upload
+import plotly.express as px
 
 
 # Função para simular o processamento do arquivo
@@ -23,15 +25,19 @@ def process_upload(contents, filename):
 def configurar_callbacks(app):
     # Callback para carregar e exibir informações do arquivo
     @app.callback(
-        [Output('upload-details', 'children'),
-         Output('dataset-info', 'children'),
-         Output('dataset-action', 'children')],
+        [
+            Output('data-store', 'data'),
+            Output('upload-details', 'children'),
+            Output('dataset-info', 'children'),
+            Output('dataset-action', 'children')
+
+        ],
         [Input('upload-data', 'contents')],
         [State('upload-data', 'filename')]
     )
     def update_output(contents, filename):
         if contents is None:
-            return dash.no_update, dash.no_update, dash.no_update
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
         df = process_upload(contents, filename)
         num_lines, num_columns = df.shape
@@ -59,18 +65,48 @@ def configurar_callbacks(app):
             href="#section-result",
             children="Continuar",
             n_clicks=0)
-
-        return file_datails, dataset_info, dataset_actions
+        data_json = df.to_json(date_format='iso', orient='split')
+        return data_json, file_datails, dataset_info, dataset_actions
 
     # Callback para voltar e carregar um novo arquivo ou prosseguir com o arquivo carregado
-    @app.callback(
-        Output('section-result-content', 'children'),
-        [Input('btn-process-dataset', 'n_clicks')]
-    )
-    def continue_with_file(n_clicks):
+    @app.callback([Output("entropy-graph", "figure")],
+                  Output('iterate-summary', 'children'),
+                  [Input('btn-process-dataset', 'n_clicks'),
+                   Input('data-store', 'data')]
+                  )
+    def continue_with_file(n_clicks, data):
         if n_clicks is None or n_clicks == 0:
-            return dash.no_update
+            return dash.no_update, dash.no_update
 
-        # Adicione a lógica aqui para prosseguir com o arquivo carregado
-        return f"Clique realizado {n_clicks} vezes..."
+        df = pd.read_json(io.StringIO(data), orient='split')
+        data = df.drop(["Census tract"], axis=1)
+        df_entropy, best_cluster, iterate_summary, iterates = obter_avaliacao_de_agrupamento(data)
 
+        # Gráfico da entropia
+        fig_entropy_graph = px.bar(df_entropy,
+                                   x="entropia",
+                                   y="variavel",
+                                   orientation='h',
+                                   template="plotly_dark",
+                                   color="entropia",
+                                   title='Gráfico de Barras Horizontais',
+                                   text="entropia")
+
+        fig_entropy_graph.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+
+        df_iterate_summary = pd.DataFrame(iterate_summary)
+
+        table_iterate_summary = dash_table.DataTable(
+            data=df_iterate_summary.to_dict("records"),
+            columns=[{"name": i, "id": i} for i in df_iterate_summary.columns],
+            style_header={
+                'backgroundColor': 'rgb(30, 30, 30)',
+                'color': 'white'
+            },
+            style_data={
+                'backgroundColor': 'rgb(50, 50, 50)',
+                'color': 'white'
+            },
+        )
+
+        return fig_entropy_graph, table_iterate_summary
