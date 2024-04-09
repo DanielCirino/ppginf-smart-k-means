@@ -83,30 +83,40 @@ def configurar_callbacks(app):
         df_entropy, best_cluster, iterate_summary, iterates = obter_avaliacao_de_agrupamento(data)
 
         # Gráfico da entropia
-        fig_entropy_graph = px.bar(df_entropy,
-                                   x="entropia",
-                                   y="variavel",
-                                   orientation='h',
-                                   template="plotly_dark",
-                                   color="entropia",
-                                   title='Gráfico de Barras Horizontais',
-                                   text="entropia")
+        fig_entropy_graph = gerar_grafico_entropia(df_entropy)
 
-        fig_entropy_graph.update_traces(texttemplate='%{text:.2s}', textposition='outside')
-
+        # tabela de iteracoes
         df_iterate_summary = pd.DataFrame(iterate_summary)
-
-        table_iterate_summary = dash_table.DataTable(
-            data=df_iterate_summary.to_dict("records"),
-            columns=[{"name": i, "id": i} for i in df_iterate_summary.columns],
-            style_header={
-                'backgroundColor': 'rgb(30, 30, 30)',
-                'color': 'white'
-            },
-            style_data={
-                'backgroundColor': 'rgb(50, 50, 50)',
-                'color': 'white'
-            },
-        )
+        table_iterate_summary = gerar_tabela_iteracoes(df_iterate_summary)
 
         return fig_entropy_graph, table_iterate_summary
+
+
+def gerar_grafico_entropia(df):
+    # Gráfico da entropia
+    fig = px.bar(df,
+                 x="entropia",
+                 y="variavel",
+                 orientation='h',
+                 template="plotly_dark",
+                 color="entropia",
+                 title='Gráfico de Barras Horizontais',
+                 text="entropia")
+
+    fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+    return fig
+
+
+def gerar_tabela_iteracoes(df):
+    lista_iteracoes = html.Div(className="list-group", children=[
+        html.Div(className="list-group-item list-group-item-action", children=[
+            html.Div(className="d-flex w-100 justify-content-between", children=[
+                html.H5(className="mb-1", children=f"Iteração {row['iteracao']}"),
+                html.Small(children="")
+            ]),
+            html.P(className="mb-1", children=f"Excluída a {row['variavel_excluida']}"),
+            html.Small(children=f"{row['resultados_validos']} Resultados válidos")
+        ]) for _, row in df.iterrows()
+    ])
+
+    return lista_iteracoes

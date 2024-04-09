@@ -43,40 +43,42 @@ section_upload = html.Section(
             children=[
                 html.Div(className="row", children=[
                     html.Div(className="col-md-4 d-flex", children=[
-                        html.Div(className="card text-white bg-dark mb-3", children=[
-                            # html.Img(className="card-img-top", src="./assets/upload_icon.png", width="24px"),
-                            html.Div(className="card-body", children=[
-                                html.H5(className="card-title", children="Fazer upload"),
-                                html.P(className="card-text",
-                                       children="Qual a melhor classificação para os seus dados?"
-                                                "Faça um upload dos seus dados e descubra ;)")
-                            ]),
-                            html.Div(className="card-body", children=[
-                                html.Div(
-                                    className="row",
-                                    children=[
-                                        html.Div(className="col-md-12", children=[
-                                            dcc.Upload(
-                                                id='upload-data',
-                                                children=html.Div([
-                                                    html.A(' Arraste ou clique para selecionar um arquivo')
-                                                ]),
-                                                style={
-                                                    'width': '100%',
-                                                    'borderWidth': '1px',
-                                                    'borderStyle': 'dashed',
-                                                    'borderRadius': '10px',
-                                                    'textAlign': 'center',
-                                                    'padding': '5px 5px 5px 5px',
-                                                    'font-family': 'Courier New'
-                                                },
-                                                # Permite o upload de múltiplos arquivos
-                                                multiple=False
-                                            )
-                                        ]),
-                                    ])
+                        html.Div(
+                            className="card text-white bg-dark mb-3",
+                            children=[
+                                # html.Img(className="card-img-top", src="./assets/upload_icon.png", width="24px"),
+                                html.Div(className="card-body", children=[
+                                    html.H5(className="card-title", children="Fazer upload"),
+                                    html.P(className="card-text",
+                                           children="Qual a melhor classificação para os seus dados?"
+                                                    "Faça um upload dos seus dados e descubra ;)")
+                                ]),
+                                html.Div(className="card-body", children=[
+                                    html.Div(
+                                        className="row",
+                                        children=[
+                                            html.Div(className="col-md-12", children=[
+                                                dcc.Upload(
+                                                    id='upload-data',
+                                                    children=html.Div([
+                                                        html.A(' Arraste ou clique para selecionar um arquivo')
+                                                    ]),
+                                                    style={
+                                                        'width': '100%',
+                                                        'borderWidth': '1px',
+                                                        'borderStyle': 'dashed',
+                                                        'borderRadius': '10px',
+                                                        'textAlign': 'center',
+                                                        'padding': '5px 5px 5px 5px',
+                                                        'font-family': 'Courier New'
+                                                    },
+                                                    # Permite o upload de múltiplos arquivos
+                                                    multiple=False
+                                                )
+                                            ]),
+                                        ])
+                                ])
                             ])
-                        ])
                     ]),
                     html.Div(
                         className="col-md-4 d-flex",
@@ -127,14 +129,74 @@ section_result = html.Section(
             id="section-result-content",
             className="container mt-3",
             children=[
-                html.P(id="count-click", children="Conteúdo da seção 2..."),
                 html.Div(className="row", children=[
-                    html.Div(className="col-md-6", children=[
-                        dcc.Graph(id="entropy-graph")
+                    html.Div(className="col-md-3", children=[
+                        html.Div(
+                            className="card text-white bg-dark",
+                            children=[
+                                html.Div(className="card-header", children="Qtd. ótima de grupos"),
+                                html.Div(className="card-body p-0", children=[
+
+                                ]),
+
+                            ])
+
                     ]),
-                    html.Div(className="col-md-6", children=[
-                        html.Div(id="iterate-summary")
+                    html.Div(className="col-md-3", children=[
+                        html.Div(
+                            className="card text-white bg-dark",
+                            children=[
+                                html.Div(className="card-header", children="Variáveis consideradas"),
+                                html.Div(className="card-body p-0", children=[
+
+                                ]),
+
+                            ])
+
+                    ]),
+                    html.Div(className="col-md-3", children=[
+                        html.Div(
+                            className="card text-white bg-dark",
+                            children=[
+                                html.Div(className="card-header", children="Silhueta média"),
+                                html.Div(className="card-body p-0", children=[
+
+                                ]),
+
+                            ])
+
+                    ]),
+                ]),
+
+                html.Div(className="row mt-3", children=[
+                    html.Div(className="col-md-8", children=[
+                        html.Div(
+                            className="card text-white bg-dark",
+                            children=[
+                                html.Div(className="card-header", children="Entropia das variáveis"),
+                                html.Div(className="card-body p-0", children=[
+                                    dcc.Graph(id="entropy-graph")
+                                ]),
+
+                            ])
+
+                    ]),
+
+                    html.Div(className="col-md-4", children=[
+                        html.Div(
+                            className="card text-white bg-dark",
+                            children=[
+                                html.Div(
+                                    className="card-header",
+                                    children="Sumário de iterações"),
+                                html.Div(
+                                    id="iterate-summary",
+                                    className="card-body",
+                                    children="Informações sobre as iterações realizadas no dataset."),
+                            ])
+
                     ])
+
                 ]),
 
             ])
@@ -151,6 +213,44 @@ conteudo = html.Div(
         html.Div([
             html.H2("Seção 3", id="section-3", className="display-5"),
             html.P("Conteúdo da seção 3..."),
+
+            html.Div(className="list-group", children=[
+                html.Div(className="list-group-item list-group-item-action", children=[
+                    html.Div(className="d-flex w-100 justify-content-between", children=[
+                        html.H5(className="mb-1", children="Iteração 1"),
+                        html.Small(children="")
+                    ]),
+                    html.P(className="mb-1", children="Excluída a variável: "),
+                    html.Small(children="Resultados válidos")
+                ])
+            ])
+
+            # <div class="list-group">
+            #   <a href="#" class="list-group-item list-group-item-action active">
+            #     <div class="d-flex w-100 justify-content-between">
+            #       <h5 class="mb-1">List group item heading</h5>
+            #       <small>3 days ago</small>
+            #     </div>
+            #     <p class="mb-1">Some placeholder content in a paragraph.</p>
+            #     <small>And some small print.</small>
+            #   </a>
+            #   <a href="#" class="list-group-item list-group-item-action">
+            #     <div class="d-flex w-100 justify-content-between">
+            #       <h5 class="mb-1">List group item heading</h5>
+            #       <small class="text-muted">3 days ago</small>
+            #     </div>
+            #     <p class="mb-1">Some placeholder content in a paragraph.</p>
+            #     <small class="text-muted">And some muted small print.</small>
+            #   </a>
+            #   <a href="#" class="list-group-item list-group-item-action">
+            #     <div class="d-flex w-100 justify-content-between">
+            #       <h5 class="mb-1">List group item heading</h5>
+            #       <small class="text-muted">3 days ago</small>
+            #     </div>
+            #     <p class="mb-1">Some placeholder content in a paragraph.</p>
+            #     <small class="text-muted">And some muted small print.</small>
+            #   </a>
+            # </div>
         ], style={"min-height": "100vh"}),
     ])
 
