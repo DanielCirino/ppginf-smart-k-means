@@ -167,20 +167,20 @@ section_result = html.Section(
                 ]),
 
                 html.Div(className="row mt-3", children=[
-                    html.Div(className="col-md-4", children=[
+                    html.Div(className="col-md-6", children=[
                         html.Div(
                             className="card text-white bg-dark",
                             children=[
                                 html.Div(className="card-header", children="Silhueta melhor arranjo"),
                                 html.Div(className="card-body p-0", children=[
-                                    dcc.Graph(id="cluster-graph")
+                                    dcc.Graph(id="silhouette-graph")
                                 ]),
 
                             ]
                         )
                     ]),
 
-                    html.Div(className="col-md-4", children=[
+                    html.Div(className="col-md-6", children=[
                         html.Div(
                             className="card text-white bg-dark",
                             children=[
@@ -193,7 +193,7 @@ section_result = html.Section(
                         )
                     ]),
 
-                    html.Div(className="col-md-4", children=[
+                    html.Div(className="col-md-6", children=[
                         html.Div(
                             className="card text-white bg-dark",
                             children=[

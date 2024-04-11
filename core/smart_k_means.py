@@ -176,4 +176,4 @@ def obter_avaliacao_de_agrupamento(dados, min_clusters=3, max_clusters=7):
         i_entropia += 1
         iteracao += 1
 
-    return df_entropias,melhor_arranjo, sumario_iteracoes, iteracao + 1
+    return df_entropias,melhor_arranjo, sumario_iteracoes, iteracao + 1,qtd_variaveis
