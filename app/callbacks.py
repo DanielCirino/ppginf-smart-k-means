@@ -6,7 +6,7 @@ import pandas as pd
 from dash import Input, Output, State, html, dash_table
 
 from core.smart_k_means import obter_avaliacao_de_agrupamento
-from layout import section_upload
+
 import plotly.express as px
 
 
@@ -43,22 +43,31 @@ def configurar_callbacks(app):
         num_lines, num_columns = df.shape
         columns_types = zip(df.columns, df.dtypes)
 
-        file_datails = f"""
-        O arquivo '{filename}' possui {num_lines} registros e {num_columns} colunas.
-        Os detalhes dos campos do arquivo podem ser observados ao lado."""
-
-        # Retorna o nome do arquivo e a quantidade de linhas
-        dataset_info = [
-            html.P(className="card-text",
-                   children="Estes são os atributos presentes no arquivo com seus respectivos tipos."),
-            html.Ul(
-                className="list-group",
+        file_datails = html.Ul(
+                className="list-group list-group-flush",
                 children=[
                     html.Li(
-                        className="list-group-item list-group-item-dark",
+                        className="list-group-item bg-info text-light",
+                        children=f"Total de registros: {num_lines}"),
+                    html.Li(
+                        className="list-group-item bg-info text-light",
+                        children=f"Qtd. Colunas: {num_columns}"),
+                ]
+            )
+
+
+        # Retorna o nome do arquivo e a quantidade de linhas
+        dataset_info = html.Div([
+            html.P(className="card-text",
+                   children="Estes são os atributos e seus respectivos tipos."),
+            html.Ul(
+                className="list-group list-group-flush",
+                children=[
+                    html.Li(
+                        className="list-group-item bg-dark text-light",
                         children=f"{i + 1}. '{col[0]}' [{col[1]}]")
                     for i, col in enumerate(columns_types)]
-            )]
+            )],style={"height":"300px","overflow-y":"auto"})
         dataset_actions = html.A(
             id="btn-process-dataset",
             className="btn btn-primary mt-3",
@@ -108,8 +117,8 @@ def gerar_grafico_entropia(df):
 
 
 def gerar_tabela_iteracoes(df):
-    lista_iteracoes = html.Div(className="list-group", children=[
-        html.Div(className="list-group-item list-group-item-action", children=[
+    lista_iteracoes = html.Div(className="list-group ", children=[
+        html.Div(className="list-group-item list-group-item-action bg-dark text-light", children=[
             html.Div(className="d-flex w-100 justify-content-between", children=[
                 html.H5(className="mb-1", children=f"Iteração {row['iteracao']}"),
                 html.Small(children="")
