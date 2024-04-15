@@ -1,18 +1,9 @@
-import pandas as pd
 # importar bibliotecas
 import numpy as np
 import pandas as pd
-
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
 from sklearn.metrics import silhouette_samples
-
-import scipy.stats
-
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import seaborn as sns
+from sklearn.metrics import silhouette_score
 
 
 def avaliar_opcoes_arranjo(qtd_min_clusters, qtd_max_clusters, dataset):
@@ -134,34 +125,28 @@ def calcular_entropia_dataset(dados):
 
 def obter_avaliacao_de_agrupamento(dados, min_clusters=3, max_clusters=7):
     df_entropias = calcular_entropia_dataset(dados)
-
     resultados = avaliar_opcoes_arranjo(min_clusters, max_clusters, dados)
     resultados_validos = obter_resultados_validos(resultados)
     melhor_arranjo = selecionar_melhor_opcao_arranjo(resultados_validos)
 
     i_entropia = 0
     iteracao = 1
-
     sumario_iteracoes = []
 
     while melhor_arranjo is None:
-        qtd_variaveis = dados.shape[1]
-        if qtd_variaveis < 3:
+        qtd_variaveis_restante = dados.shape[1]
+        if qtd_variaveis_restante < 3:
             print(
                 f"{iteracao} - SEM RESULTADOS VÁLIDOS: Dataset após a exclusão das variáveis não encontrou um resultado.")
-            return None, None, iteracao + 1
+            return pd.DataFrame(), None, sumario_iteracoes, iteracao + 1, 0, None
 
-        # print(f"{iteracao} - SEM RESULTADOS VÁLIDOS: Analisar a entropia das variáveis.")
+        # recuperar os dados da da maior entropia
+        maior_entropia = df_entropias.iloc[i_entropia]
 
-        # ajustar o nome da variável
-        menor_entropia = df_entropias.iloc[i_entropia]
+        # Excluir varíavel com maior entropia
+        dados = dados.drop([maior_entropia["variavel"]], axis=1)
 
-        # print(f"Excluir a variável '{menor_entropia['variavel']}' do dataset ")
-
-        # Excluir varíavel com menor entropia
-        dados = dados.drop([menor_entropia["variavel"]], axis=1)
-
-        # Refazer o K-means utilizando o novo dataset sem a variável com a menor entropia
+        # Refazer o K-means utilizando o novo dataset sem a variável com a maior entropia
         resultados = avaliar_opcoes_arranjo(min_clusters, max_clusters, dados)
         resultados_validos = obter_resultados_validos(resultados)
 
@@ -169,11 +154,17 @@ def obter_avaliacao_de_agrupamento(dados, min_clusters=3, max_clusters=7):
 
         dados_iteracao = {"iteracao": iteracao,
                           "resultados_validos": len(resultados_validos),
-                          "variavel_excluida": f'Variável: {menor_entropia["variavel"]} [{menor_entropia["entropia"]}]', }
+                          "variavel_excluida": maior_entropia["variavel"],
+                          "entropia": maior_entropia["entropia"]}
 
         sumario_iteracoes.append(dados_iteracao)
-
         i_entropia += 1
         iteracao += 1
 
-    return df_entropias,melhor_arranjo, sumario_iteracoes, iteracao + 1,qtd_variaveis
+    return (df_entropias,
+            melhor_arranjo,
+            sumario_iteracoes,
+            iteracao - 1,
+            dados.columns,
+            resultados,
+            dados)

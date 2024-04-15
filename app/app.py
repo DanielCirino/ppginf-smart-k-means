@@ -6,7 +6,7 @@ from layout import configurar_layout
 import plotly.io as pio
 pio.templates.default = "plotly_dark"
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],)
 
 # Layout da aplicação
 configurar_layout(app)

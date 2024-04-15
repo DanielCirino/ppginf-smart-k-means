@@ -1,5 +1,4 @@
-import dash_bootstrap_components as dbc
-from dash import html, dcc
+from dash import html, dcc, dash_table
 
 sidebar = html.Div(
     [
@@ -122,8 +121,21 @@ section_result = html.Section(
 
                                 html.Div(className="card-body", children=[
                                     html.H5(className="card-title", children="Qtd. Ótima"),
-                                    html.H1(id="qtd-otima-grupos", className="display-5 p-2", children=0)
+                                    html.H5(id="qtd-otima-grupos", className="display-6 p-2", children=0)
                                 ]),
+                            ])
+
+                    ]),
+                    html.Div(className="col-md-3", children=[
+
+                        html.Div(
+                            className="card text-white bg-dark",
+                            children=[
+                                html.Div(className="card-body", children=[
+                                    html.H5(className="card-title", children="Silhueta Média"),
+                                    html.H1(id="vlr-silhueta-media", className="display-6 p-2", children="0.0000")
+                                ]),
+
                             ])
 
                     ]),
@@ -133,12 +145,12 @@ section_result = html.Section(
                             children=[
                                 html.Div(className="card-body", children=[
                                     html.H5(className="card-title", children="Iterações"),
-                                    html.H1(id="qtd-iteracoes", className="display-5 p-2", children=0)
+                                    html.H1(id="qtd-iteracoes", className="display-6 p-2", children=0)
                                 ]),
 
                             ])
-
                     ]),
+
                     html.Div(className="col-md-3", children=[
                         html.Div(
                             className="card text-white bg-dark",
@@ -146,28 +158,16 @@ section_result = html.Section(
 
                                 html.Div(className="card-body", children=[
                                     html.H5(className="card-title", children="Variáveis Restantes"),
-                                    html.H1(id="qtd-variaveis-restantes", className="display-5 p-2", children=0)
+                                    html.H1(id="qtd-variaveis-restantes", className="display-6 p-2", children=0)
                                 ]),
 
                             ])
 
-                    ]),
-                    html.Div(className="col-md-3", children=[
-                        html.Div(
-                            className="card text-white bg-dark",
-                            children=[
-                                html.Div(className="card-body", children=[
-                                    html.H5(className="card-title", children="Silhueta Média"),
-                                    html.H1(id="vlr-silhueta-media", className="display-5 p-2", children="0.0000")
-                                ]),
-
-                            ])
-
-                    ]),
+                    ])
                 ]),
 
                 html.Div(className="row mt-3", children=[
-                    html.Div(className="col-md-6", children=[
+                    html.Div(className="col-md-12", children=[
                         html.Div(
                             className="card text-white bg-dark",
                             children=[
@@ -180,31 +180,40 @@ section_result = html.Section(
                         )
                     ]),
 
+                ]),
+
+                html.Div(className="row mt-3", children=[
                     html.Div(className="col-md-6", children=[
+
                         html.Div(
                             className="card text-white bg-dark",
                             children=[
-                                html.Div(className="card-header", children="Detalhes do arranjo"),
+                                html.Div(className="card-header", children="Comparação dos grupos"),
                                 html.Div(className="card-body p-0", children=[
-                                    dcc.Graph(id="entropy-graph")
+                                    dcc.Graph(id="comparison-graph")
                                 ]),
 
                             ]
                         )
+
                     ]),
 
                     html.Div(className="col-md-6", children=[
                         html.Div(
                             className="card text-white bg-dark",
                             children=[
-                                html.Div(className="card-header", children="Comparação dos grupos"),
+                                html.Div(
+                                    id="container-detalhes-arranjo",
+                                    className="card-header",
+                                    children="Detalhes do arranjo"),
                                 html.Div(className="card-body p-0", children=[
-                                    dcc.Graph(id="entropy-graph")
+
+                                    dcc.Graph(id="cluster-graph")
                                 ]),
 
                             ]
                         )
-                    ])
+                    ]),
                 ]),
 
                 html.Div(className="row mt-3", children=[
@@ -228,7 +237,7 @@ section_result = html.Section(
                             children=[
                                 html.Div(
                                     className="card-header",
-                                    children="Sumário de iterações"),
+                                    children="Detalhes das iterações"),
                                 html.Div(
                                     id="iterate-summary",
                                     className="card-body",
@@ -247,20 +256,14 @@ conteudo = html.Div(
     children=[
         section_result,
         html.Hr(),
-        # Seção 3
+        # Seção resultados
         html.Div([
-            html.H2("Seção 3", id="section-3", className="display-5"),
-            html.P("Conteúdo da seção 3..."),
+            html.H2("Resultado da classificação", id="section-3", className="display-5"),
+            html.P("Avaliação da classificação"),
 
-            html.Div(className="list-group", children=[
-                html.Div(className="list-group-item list-group-item-action", children=[
-                    html.Div(className="d-flex w-100 justify-content-between", children=[
-                        html.H5(className="mb-1", children="Iteração 1"),
-                        html.Small(children="")
-                    ]),
-                    html.P(className="mb-1", children="Excluída a variável: "),
-                    html.Small(children="Resultados válidos")
-                ])
+            html.Div(className="row", children=[
+                html.Div(id="tabela-resultado",className="col-md-12",
+                         children=[])
             ])
 
         ], style={"min-height": "100vh"}),
