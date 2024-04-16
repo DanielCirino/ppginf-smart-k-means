@@ -259,12 +259,38 @@ conteudo = html.Div(
         # Seção resultados
         html.Div([
             html.H2("Resultado da classificação", id="section-3", className="display-5"),
-            html.P("Avaliação da classificação"),
 
-            html.Div(className="row", children=[
-                html.Div(id="tabela-resultado",className="col-md-12",
+            html.Div(className="row mt-3", children=[
+                html.H4(
+                    children=[
+                        "Atribuição dos grupos",
+                        html.Small(html.Button(
+                            id="btn-download-resultado",
+                            className="btn btn-outline-primary btn-large m-3",
+                            children="Download")),
+                        dcc.Download(id="down-resultados")
+                    ]
+                ),
+                html.Div(id="tabela-classificacao", className="col-md-12",
                          children=[])
-            ])
+            ]),
+
+            html.Div(className="row mt-3", children=[
+                html.H4(
+                    children=[
+                        "Dashboard variáveis x Grupos",
+                        html.Small(html.Button(
+                            id="btn-download-anova",
+                            className="btn btn-outline-primary btn-large m-3",
+                            children="Download")),
+                        dcc.Download(id="down-anova")
+                    ]
+                ),
+                html.Div(id="tabela-variaveis-grupo", className="col-md-12",
+                         children=[
+
+                         ])
+            ]),
 
         ], style={"min-height": "100vh"}),
     ])
@@ -291,6 +317,14 @@ def configurar_layout(app):
                     style={"color": "#ffffff", }
                 )
             ]),
-            dcc.Store(id='data-store')
+            dcc.Store(id='data-store'),
+            dcc.Store(id='conteudo-arquivo'),
+            dcc.Store(id='dataset-original'),
+            dcc.Store(id='dataset-resultados'),
+            dcc.Store(id='dataset-melhor-arranjo'),
+            dcc.Store(id='dataset-iteracoes'),
+            dcc.Store(id='dataset-final'),
+            dcc.Store(id='dataset-anova')
+
         ], style={"background-color": "#212121", "min-height": "100vh"}
     )

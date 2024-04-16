@@ -1,4 +1,4 @@
-estado; custo_terreno ;vacas_ordenhadas;mil_litros_leite;profissionais;consumo;logistica;manutencao;busca_laticinios;fabrica_mais_50_empregados
+estado;custo_terreno;vacas_ordenhadas;mil_litros_leite;profissionais;consumo;logistica;manutencao;busca_laticinios;fabrica_mais_50_empregados
 Acre; 0.699826387226259 ;50165;2927;294;19793.6;23.8825336936813;25.3607895039426;0;1
 Alagoas; 0.911128221665401 ;271166;19905;1178;34184.44;14.5725670746121;17.5820188716787;25;4
 Amapá; 0.894773077527358 ;5170;0;301;9795368;17.5500686219824;23.9326848199171;0;0

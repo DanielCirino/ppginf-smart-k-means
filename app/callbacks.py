@@ -1,7 +1,9 @@
 import base64
 import io
+import json
 
 import dash
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -12,7 +14,7 @@ from core.smart_k_means import obter_avaliacao_de_agrupamento
 
 
 # Função para simular o processamento do arquivo
-def process_upload(contents, filename):
+def processar_upload(contents, filename):
     if contents is not None:
         # Lê o conteúdo do arquivo como um DataFrame do Pandas
         content_type, content_string = contents.split(',')
@@ -39,7 +41,8 @@ def configurar_callbacks(app):
     # Callback para carregar e exibir informações do arquivo
     @app.callback(
         [
-            Output('data-store', 'data'),
+            Output('conteudo-arquivo', 'data'),
+            Output('dataset-original', 'data'),
             Output('upload-details', 'children'),
             Output('dataset-info', 'children'),
             Output('dataset-action', 'children')
@@ -48,11 +51,11 @@ def configurar_callbacks(app):
         [Input('upload-data', 'contents')],
         [State('upload-data', 'filename')]
     )
-    def update_output(contents, filename):
+    def processar_dados_arquivo(contents, filename):
         if contents is None:
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-        df = process_upload(contents, filename)
+        df = processar_upload(contents, filename)
         num_lines, num_columns = df.shape
         columns_types = zip(df.columns, df.dtypes)
 
@@ -115,40 +118,48 @@ def configurar_callbacks(app):
         ])
 
         data_json = df.to_json(date_format='iso', orient='split')
-        return data_json, file_datails, dataset_info, dataset_actions
+        return (contents,
+                data_json,
+                file_datails,
+                dataset_info,
+                dataset_actions)
 
     # Callback para voltar e carregar um novo arquivo ou prosseguir com o arquivo carregado
     @app.callback(
-
-        [Output('qtd-otima-grupos', 'children'),
-         Output('qtd-iteracoes', 'children'),
-         Output('qtd-variaveis-restantes', 'children'),
-         Output('vlr-silhueta-media', 'children'),
-         Output('silhouette-graph', 'figure'),
-         Output("container-detalhes-arranjo", "children"),
-         Output("cluster-graph", "figure"),
-         Output("comparison-graph", "figure"),
-         Output("entropy-graph", "figure"),
-         Output('iterate-summary', 'children'),
-         Output('data-store', 'data', allow_duplicate=True),
-         Output('tabela-resultado', 'children')
-         ],
-        [Input('btn-processar', 'n_clicks'),
-         Input('in-qtd-min-grupos', 'value'),
-         Input('in-qtd-max-grupos', 'value'),
-         Input('data-store', 'data')],
+        [
+            Output('qtd-otima-grupos', 'children'),
+            Output('qtd-iteracoes', 'children'),
+            Output('qtd-variaveis-restantes', 'children'),
+            Output('vlr-silhueta-media', 'children'),
+            Output('silhouette-graph', 'figure'),
+            Output("container-detalhes-arranjo", "children"),
+            Output("cluster-graph", "figure"),
+            Output("comparison-graph", "figure"),
+            Output("entropy-graph", "figure"),
+            Output('iterate-summary', 'children'),
+            Output('tabela-classificacao', 'children'),
+            Output('tabela-variaveis-grupo', 'children'),
+            Output('dataset-resultados', 'data'),
+            Output('dataset-melhor-arranjo', 'data'),
+            Output('dataset-iteracoes', 'data')
+        ],
+        [
+            Input('btn-processar', 'n_clicks'),
+            Input('in-qtd-min-grupos', 'value'),
+            Input('in-qtd-max-grupos', 'value'),
+            Input('dataset-original', 'data')],
         prevent_initial_call=True
     )
-    def continue_with_file(n_clicks, min_gruops, max_grupos, data):
+    def fazer_classificacao_dados(n_clicks, min_grupos, max_grupos, data):
         if n_clicks is None or n_clicks == 0:
             return dash.no_update, dash.no_update
 
         df = pd.read_json(io.StringIO(data), orient='split')
-
         dados = df.drop(df.columns[0], axis=1)
 
+        # normalizar os dados
         for col in dados.columns:
-            dados[col] = (dados[col] - dados[col].min()) / (dados[col].max() - dados[col].min())
+            dados[col] = (dados[col] - dados[col].mean()) / (dados[col].std()).round(4)
 
         (df_entropia,
          melhor_cluster,
@@ -156,12 +167,10 @@ def configurar_callbacks(app):
          iteracoes,
          variaveis_restantes,
          resultados,
-         dados) = obter_avaliacao_de_agrupamento(dados, min_gruops, max_grupos)
+         dados) = obter_avaliacao_de_agrupamento(dados.round(4), min_grupos, max_grupos)
 
         nome_melhor_cluster = melhor_cluster["arranjo"]
         silhueta_media = melhor_cluster["silhueta_media"]
-        # resumo_classificacao = melhor_cluster["resumo_classificacao"]
-        # print(variaveis_restantes)
 
         # Gráfico das silhuetas
         grafico_silhueta = gerar_grafico_silhueta(melhor_cluster)
@@ -186,6 +195,10 @@ def configurar_callbacks(app):
         tabela_resultados = gerar_tabela_resultado(df,
                                                    melhor_cluster["rotulos"],
                                                    df_iteracoes["variavel_excluida"].values)
+        # tabela de resultados
+        tabela_variaveis_grupos = gerar_tabela_variaveis_grupo(df,
+                                                               melhor_cluster["rotulos"],
+                                                               df_iteracoes["variavel_excluida"].values)
         return (nome_melhor_cluster,
                 iteracoes,
                 len(variaveis_restantes),
@@ -196,20 +209,81 @@ def configurar_callbacks(app):
                 grafico_comparacao,
                 grafico_entropia,
                 tabela_iteracoes,
+                tabela_resultados,
+                tabela_variaveis_grupos,
                 resultados,
-                tabela_resultados)
+                melhor_cluster,
+                df_iteracoes.to_json(date_format='iso', orient='split'))
 
     @app.callback(
         Output("cluster-graph", "figure", allow_duplicate=True),
         [
             Input('dropdown-resultado', 'value'),
-            Input('data-store', 'data'),
+            Input('dataset-resultados', 'data'),
         ],
         prevent_initial_call=True
     )
     def atualizar_grafico_grupo(value, data):
         resultado = data[value]
         return gerar_grafico_agrupamento(resultado)
+
+    @app.callback(
+        [Output("down-resultados", "data"),
+         Output("dataset-final", "data")],
+        [Input('btn-download-resultado', 'n_clicks'),
+         Input('dataset-original', 'data'),
+         Input('dataset-melhor-arranjo', 'data')
+         ], prevent_initial_call=True,
+    )
+    def fazer_download_classificacao(n_clicks, dados_originais, dados_melhor_arranjo):
+        if n_clicks <= 0:
+            return None, None
+
+        df_original = pd.read_json(io.StringIO(dados_originais), orient='split')
+        df_classficacao = df_original.copy()
+        primeira_coluna = df_classficacao.columns[0]
+        df_classficacao[primeira_coluna] = df_classficacao[primeira_coluna].astype(str)
+        df_classficacao["grupo"] = pd.Series(dados_melhor_arranjo["rotulos"])
+
+        return (dcc.send_data_frame(df_classficacao.to_excel, "resultado_smart_k_means.xlsx", sheet_name="result"),
+                df_classficacao.to_json(date_format='iso', orient='split'))
+
+    @app.callback(
+        [Output("down-anova", "data"),
+         Output("dataset-anova", "data")],
+        [Input('btn-download-anova', 'n_clicks'),
+         Input('dataset-original', 'data'),
+         Input('dataset-melhor-arranjo', 'data'),
+         Input('dataset-iteracoes', 'data')
+         ], prevent_initial_call=True
+    )
+    def fazer_download_anova(n_clicks, dados_originais, dados_melhor_arranjo,dados_iteracoes):
+        if n_clicks <= 0:
+            return None, None
+
+
+        df_original = pd.read_json(io.StringIO(dados_originais), orient='split')
+        df_classficacao = df_original.copy()
+        primeira_coluna = df_classficacao.columns[0]
+        df_classficacao[primeira_coluna] = df_classficacao[primeira_coluna].astype(str)
+
+        df_classficacao["grupo"] = pd.Series(dados_melhor_arranjo["rotulos"])
+
+        df_iteracoes=pd.read_json(io.StringIO(dados_iteracoes), orient='split')
+
+        colunas_excluidas = df_iteracoes["variavel_excluida"].values
+        novo_df_arquivo = df_classficacao.drop(colunas_excluidas, axis=1)
+
+        cols = novo_df_arquivo.columns
+        dados_anova = []
+
+        for grupo in novo_df_arquivo["grupo"].unique():
+            anova = novo_df_arquivo[novo_df_arquivo["grupo"] == grupo].describe()
+            dados_anova.append(np.append(anova.iloc[[1]].values[0][:-1], f"G{grupo}"))
+
+        df_variaveis = pd.DataFrame(dados_anova, columns=cols[1::])
+        return (dcc.send_data_frame(df_variaveis.to_excel, "anova_smart_k_means.xlsx", sheet_name="result"),
+                df_variaveis.to_json(date_format='iso', orient='split'))
 
 
 def gerar_grafico_entropia(df):
@@ -333,6 +407,7 @@ def gerar_tabela_resultado(df_original, rotulos, colunas_excluidas):
     data_table = dash_table.DataTable(
         df_classificacao.to_dict('records'),
         [{"name": col, "id": col} for col in df_classificacao.columns],
+        page_size=10,
         style_table={'overflowX': 'auto'},
         style_header={
             'backgroundColor': '#343a40',
@@ -349,11 +424,30 @@ def gerar_tabela_resultado(df_original, rotulos, colunas_excluidas):
             }
         ],
     )
-
-    # print(df_classificacao)
-    # fig = go.Figure(data=[go.Table(
-    #     header=dict(values=df_classificacao.columns),
-    #     cells=dict(values=df_classificacao.values.T))
-    # ])
-
     return data_table
+
+
+def gerar_tabela_variaveis_grupo(df_original, rotulos, colunas_excluidas):
+    df_classificacao = df_original.copy()
+    df_classificacao.drop(colunas_excluidas, axis=1, inplace=True)
+    df_classificacao["Grupo"] = pd.Series(rotulos)
+
+    variaveis = df_classificacao.columns[1:-1]
+    grupos = df_classificacao["Grupo"].unique()
+
+    graficos = []
+    for v in variaveis:
+        fig = px.box(df_classificacao, x="Grupo", y=v, color="Grupo", points="all")
+        grafico = dcc.Graph(figure=fig)
+        graficos_variavel = {"variavel": v, "grafico": grafico}
+
+        graficos.append(graficos_variavel)
+
+    tabela = html.Div(className="row",
+                      children=[
+                          html.Div(
+                              className="col-sm-12 col-md-6 col-lg-4 p-1",
+                              children=[grafico["grafico"]])
+                          for grafico in graficos], style={"overflow-x": "horizontal"})
+
+    return tabela
