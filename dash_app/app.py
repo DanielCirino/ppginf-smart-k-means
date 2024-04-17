@@ -13,4 +13,4 @@ configurar_layout(app)
 configurar_callbacks(app)
 
 # if __name__ == '__main__':
-#     dash_app.run_server(debug=False)
+#     app.run_server(debug=False)
