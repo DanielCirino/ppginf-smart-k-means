@@ -191,14 +191,17 @@ def configurar_callbacks(app):
         df_iteracoes = pd.DataFrame(sumario_iteracoes)
         tabela_iteracoes = gerar_tabela_colunas(df_iteracoes, df.columns)
 
+        colunas_excluidas = []
+        if len(df_iteracoes)>0:
+            colunas_excluidas =  df_iteracoes["variavel_excluida"].values
         # tabela de resultados
         tabela_resultados = gerar_tabela_resultado(df,
                                                    melhor_cluster["rotulos"],
-                                                   df_iteracoes["variavel_excluida"].values)
-        # tabela de resultados
+                                                  colunas_excluidas)
+        # tabela de variaveis
         tabela_variaveis_grupos = gerar_tabela_variaveis_grupo(df,
                                                                melhor_cluster["rotulos"],
-                                                               df_iteracoes["variavel_excluida"].values)
+                                                               colunas_excluidas)
         return (nome_melhor_cluster,
                 iteracoes,
                 len(variaveis_restantes),
@@ -302,7 +305,9 @@ def gerar_grafico_entropia(df):
 
 
 def gerar_tabela_colunas(df_iteracoes, lista_colunas_df):
-    lista_colunas_excluidas = df_iteracoes["variavel_excluida"].values
+    lista_colunas_excluidas=[]
+    if len(df_iteracoes) >0:
+        lista_colunas_excluidas = df_iteracoes["variavel_excluida"].values
 
     itens_lista = []
 
