@@ -18,10 +18,10 @@ def processar_upload(contents, filename):
     if contents is not None:
         # Lê o conteúdo do arquivo como um DataFrame do Pandas
         content_type, content_string = contents.split(',')
-        decoded = base64.b64decode(content_string).decode('utf-8')
+        decoded = base64.b64decode(content_string)
 
         # Lê o conteúdo do arquivo como um DataFrame do Pandas
-        df = pd.read_csv(io.StringIO(decoded), sep=";")
+        df = pd.read_excel(io.BytesIO(decoded))
         return df
 
 
@@ -158,16 +158,17 @@ def configurar_callbacks(app):
         dados = df.drop(df.columns[0], axis=1)
 
         # normalizar os dados
-        for col in dados.columns:
-            dados[col] = (dados[col] - dados[col].mean()) / (dados[col].std()).round(4)
+        # for col in dados.columns:
+        #     dados[col] = (dados[col] - dados[col].mean()) / (dados[col].std()).round(4)
 
-        (df_entropia,
+        (df_variaveis,
          melhor_cluster,
          sumario_iteracoes,
          iteracoes,
          variaveis_restantes,
          resultados,
          dados) = obter_avaliacao_de_agrupamento(dados.round(4), min_grupos, max_grupos)
+        print(df_variaveis)
 
         nome_melhor_cluster = melhor_cluster["arranjo"]
         silhueta_media = melhor_cluster["silhueta_media"]
@@ -185,7 +186,7 @@ def configurar_callbacks(app):
         grafico_comparacao = gerar_grafico_comparacao(resultados)
 
         # Gráfico da entropia
-        grafico_entropia = gerar_grafico_entropia(df_entropia)
+        grafico_entropia = gerar_grafico_entropia(df_variaveis)
 
         # tabela de iteracoes
         df_iteracoes = pd.DataFrame(sumario_iteracoes)
@@ -290,15 +291,16 @@ def configurar_callbacks(app):
 
 
 def gerar_grafico_entropia(df):
+    print(df)
     # Gráfico da entropia
     fig = px.bar(df,
-                 x="entropia",
+                 x="indice",
                  y="variavel",
                  orientation='h',
                  template="plotly_dark",
-                 color="entropia",
-                 title='Gráfico de Barras Horizontais',
-                 text="entropia")
+                 color="indice",
+                 title='Avaliação das variáveis',
+                 text="indice")
 
     fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
     return fig
@@ -321,11 +323,11 @@ def gerar_tabela_colunas(df_iteracoes, lista_colunas_df):
         if coluna_excluida:
             iteracao = df_iteracoes.loc[df_iteracoes["variavel_excluida"] == col]
             num_iteracao = iteracao['iteracao'].values[0]
-            entropia = iteracao['entropia'].values[0]
+            entropia = iteracao['indice'].values[0]
             resultados_validos = iteracao['resultados_validos'].values[0]
 
             resultado_processamento = (f"Deconsiderada na iteração: {num_iteracao}"
-                                       f" Entropia={entropia:.4f}")
+                                       f" Índice={entropia:.2f}")
             resultados_validos = f"{resultados_validos} Resultados válidos"
             cor_item = "text-danger"
 

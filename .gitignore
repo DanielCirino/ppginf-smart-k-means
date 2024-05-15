@@ -11,6 +11,5 @@ build
 .key
 .licence
 *.coverage
-*.egg-info
 *.pic
 *.pyc

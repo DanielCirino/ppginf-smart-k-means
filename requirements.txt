@@ -8,3 +8,4 @@ dash
 werkzeug
 dash-bootstrap-components
 openpyxl
+xlrd

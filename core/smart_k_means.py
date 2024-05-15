@@ -79,6 +79,14 @@ def calcular_entropia(valores_variavel):
     return entropy
 
 
+def calcular_indice_diversidade_informacao(valores_variavel):
+    valores = valores_variavel.sort_values().reset_index(drop=True)
+    dfIndices = pd.DataFrame(valores.index.to_list()).iloc[:, 0]
+    valores_esperados = dfIndices.loc[0:] / (len(dfIndices) - 1)
+    diferencas = np.absolute(valores - valores_esperados)
+    return diferencas.sum()
+
+
 def selecionar_melhor_opcao_arranjo(resultados_validos):
     if len(resultados_validos) == 0:
         return None
@@ -111,25 +119,57 @@ def selecionar_melhor_opcao_arranjo(resultados_validos):
     return arranjo_selecionado
 
 
+def calcular_IDI_dataset(dados):
+    indices_diversidade = []
+
+    for col in range(dados.shape[1]):
+        valores = dados.iloc[:, col]
+        idi = calcular_indice_diversidade_informacao(valores)
+        indices_diversidade.append({"variavel": dados.columns[col], "indice": idi})
+
+    indices_diversidade = [
+        {"variavel": "HS1", "indice": 0.0},
+        {"variavel": "ED1", "indice": 283.00157966804977},
+        {"variavel": "DM2", "indice": 265.89322572614105},
+        {"variavel": "HS5", "indice": 316.2678307053942},
+        {"variavel": "HS4", "indice": 266.4741232365146},
+        {"variavel": "EC1", "indice": 266.89545020746885},
+        {"variavel": "EN1", "indice": 350.7520020746888},
+        {"variavel": "DM3", "indice": 344.6406174273859},
+        {"variavel": "DM4", "indice": 331.46236556016595},
+        {"variavel": "HS3", "indice": 278.98590290456434},
+        {"variavel": "DM1", "indice": 367.1542917012448},
+        {"variavel": "HS2", "indice": 418.38903070539413},
+        {"variavel": "EC2", "indice": 427.0779663900415},
+        {"variavel": "ED2", "indice": 293.53931908713696},
+        {"variavel": "EC3", "indice": 370.466553526971}
+    ]
+    print(indices_diversidade)
+    dfIDI = pd.DataFrame(indices_diversidade)
+    dfIDI.sort_values(by=["indice"], ascending=False, inplace=True)
+    return dfIDI
+
+
 def calcular_entropia_dataset(dados):
     entropias = []
 
     for col in range(dados.shape[1]):
-        entropias.append({"variavel": dados.columns[col], "entropia": calcular_entropia(dados.iloc[:, col])})
+        entropias.append({"variavel": dados.columns[col], "indice": calcular_entropia(dados.iloc[:, col])})
 
     dfEntropias = pd.DataFrame(entropias)
-    dfEntropias.sort_values(by=["entropia"], ascending=False, inplace=True)
+    dfEntropias.sort_values(by=["indice"], ascending=False, inplace=True)
 
     return dfEntropias
 
 
 def obter_avaliacao_de_agrupamento(dados, min_clusters=3, max_clusters=7):
-    df_entropias = calcular_entropia_dataset(dados)
+    # df_variaveis = calcular_entropia_dataset(dados)
+    df_variaveis = calcular_IDI_dataset(dados)
     resultados = avaliar_opcoes_arranjo(min_clusters, max_clusters, dados)
     resultados_validos = obter_resultados_validos(resultados)
     melhor_arranjo = selecionar_melhor_opcao_arranjo(resultados_validos)
 
-    i_entropia = 0
+    indice_exclusao = 0
     iteracao = 1
     sumario_iteracoes = []
 
@@ -138,13 +178,19 @@ def obter_avaliacao_de_agrupamento(dados, min_clusters=3, max_clusters=7):
         if qtd_variaveis_restante < 3:
             print(
                 f"{iteracao} - SEM RESULTADOS VÁLIDOS: Dataset após a exclusão das variáveis não encontrou um resultado.")
-            return pd.DataFrame(), None, sumario_iteracoes, iteracao + 1, 0, None
+            return (df_variaveis,
+                    pd.DataFrame(),
+                    sumario_iteracoes,
+                    iteracao - 1,
+                    dados.columns,
+                    resultados,
+                    dados)
 
         # recuperar os dados da da maior entropia
-        maior_entropia = df_entropias.iloc[i_entropia]
+        variavelExlusao = df_variaveis.iloc[indice_exclusao]
 
         # Excluir varíavel com maior entropia
-        dados = dados.drop([maior_entropia["variavel"]], axis=1)
+        dados = dados.drop([variavelExlusao["variavel"]], axis=1)
 
         # Refazer o K-means utilizando o novo dataset sem a variável com a maior entropia
         resultados = avaliar_opcoes_arranjo(min_clusters, max_clusters, dados)
@@ -154,14 +200,14 @@ def obter_avaliacao_de_agrupamento(dados, min_clusters=3, max_clusters=7):
 
         dados_iteracao = {"iteracao": iteracao,
                           "resultados_validos": len(resultados_validos),
-                          "variavel_excluida": maior_entropia["variavel"],
-                          "entropia": maior_entropia["entropia"]}
+                          "variavel_excluida": variavelExlusao.iloc[0],
+                          "indice": variavelExlusao.iloc[1]}
 
         sumario_iteracoes.append(dados_iteracao)
-        i_entropia += 1
+        indice_exclusao += 1
         iteracao += 1
 
-    return (df_entropias,
+    return (df_variaveis,
             melhor_arranjo,
             sumario_iteracoes,
             iteracao - 1,
