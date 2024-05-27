@@ -127,23 +127,23 @@ def calcular_IDI_dataset(dados):
         idi = calcular_indice_diversidade_informacao(valores)
         indices_diversidade.append({"variavel": dados.columns[col], "indice": idi})
 
-    indices_diversidade = [
-        {"variavel": "HS1", "indice": 0.0},
-        {"variavel": "ED1", "indice": 283.00157966804977},
-        {"variavel": "DM2", "indice": 265.89322572614105},
-        {"variavel": "HS5", "indice": 316.2678307053942},
-        {"variavel": "HS4", "indice": 266.4741232365146},
-        {"variavel": "EC1", "indice": 266.89545020746885},
-        {"variavel": "EN1", "indice": 350.7520020746888},
-        {"variavel": "DM3", "indice": 344.6406174273859},
-        {"variavel": "DM4", "indice": 331.46236556016595},
-        {"variavel": "HS3", "indice": 278.98590290456434},
-        {"variavel": "DM1", "indice": 367.1542917012448},
-        {"variavel": "HS2", "indice": 418.38903070539413},
-        {"variavel": "EC2", "indice": 427.0779663900415},
-        {"variavel": "ED2", "indice": 293.53931908713696},
-        {"variavel": "EC3", "indice": 370.466553526971}
-    ]
+    # indices_diversidade = [
+    #     {"variavel": "HS1", "indice": 0.0},
+    #     {"variavel": "ED1", "indice": 283.00157966804977},
+    #     {"variavel": "DM2", "indice": 265.89322572614105},
+    #     {"variavel": "HS5", "indice": 316.2678307053942},
+    #     {"variavel": "HS4", "indice": 266.4741232365146},
+    #     {"variavel": "EC1", "indice": 266.89545020746885},
+    #     {"variavel": "EN1", "indice": 350.7520020746888},
+    #     {"variavel": "DM3", "indice": 344.6406174273859},
+    #     {"variavel": "DM4", "indice": 331.46236556016595},
+    #     {"variavel": "HS3", "indice": 278.98590290456434},
+    #     {"variavel": "DM1", "indice": 367.1542917012448},
+    #     {"variavel": "HS2", "indice": 418.38903070539413},
+    #     {"variavel": "EC2", "indice": 427.0779663900415},
+    #     {"variavel": "ED2", "indice": 293.53931908713696},
+    #     {"variavel": "EC3", "indice": 370.466553526971}
+    # ]
     print(indices_diversidade)
     dfIDI = pd.DataFrame(indices_diversidade)
     dfIDI.sort_values(by=["indice"], ascending=False, inplace=True)

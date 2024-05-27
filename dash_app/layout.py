@@ -1,4 +1,5 @@
-from dash import html, dcc, dash_table
+import dash_bootstrap_components as dbc
+from dash import html, dcc
 
 sidebar = html.Div(
     [
@@ -109,6 +110,19 @@ section_result = html.Section(
     children=[
         html.H3(className="mt-3", children="Resultado análise agrupamento"),
         html.Hr(className="mt-3"),
+        dbc.Alert(
+            id="mensagem-sem-arranjo-valido",
+            color="warning",
+            dismissable=True,
+            is_open=False,
+            children=[
+                html.H4("Atenção!", className="alert-heading"),
+                html.P(
+                    "Nenhum rsultado válido encontrado para o dataset após a exclusão das variáveis."
+                ),
+                html.Hr()
+            ]
+        ),
         html.Div(
             id="section-result-content",
             className="container-fluid mt-3",

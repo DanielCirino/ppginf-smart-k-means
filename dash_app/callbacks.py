@@ -1,6 +1,5 @@
 import base64
 import io
-import json
 
 import dash
 import numpy as np
@@ -141,16 +140,18 @@ def configurar_callbacks(app):
             Output('tabela-variaveis-grupo', 'children'),
             Output('dataset-resultados', 'data'),
             Output('dataset-melhor-arranjo', 'data'),
-            Output('dataset-iteracoes', 'data')
+            Output('dataset-iteracoes', 'data'),
+            Output('mensagem-sem-arranjo-valido', 'is_open')
         ],
         [
             Input('btn-processar', 'n_clicks'),
             Input('in-qtd-min-grupos', 'value'),
             Input('in-qtd-max-grupos', 'value'),
             Input('dataset-original', 'data')],
+        [State("mensagem-sem-arranjo-valido", "is_open")],
         prevent_initial_call=True
     )
-    def fazer_classificacao_dados(n_clicks, min_grupos, max_grupos, data):
+    def fazer_classificacao_dados(n_clicks, min_grupos, max_grupos, data, mensagem_alerta):
         if n_clicks is None or n_clicks == 0:
             return dash.no_update, dash.no_update
 
@@ -168,10 +169,33 @@ def configurar_callbacks(app):
          variaveis_restantes,
          resultados,
          dados) = obter_avaliacao_de_agrupamento(dados.round(4), min_grupos, max_grupos)
-        print(df_variaveis)
 
-        nome_melhor_cluster = melhor_cluster["arranjo"]
-        silhueta_media = melhor_cluster["silhueta_media"]
+        # Gráfico da entropia
+        grafico_entropia = gerar_grafico_entropia(df_variaveis)
+
+        # tabela de iteracoes
+        df_iteracoes = pd.DataFrame(sumario_iteracoes)
+        tabela_iteracoes = gerar_tabela_colunas(df_iteracoes, df.columns)
+
+        colunas_excluidas = []
+        if len(df_iteracoes) > 0:
+            colunas_excluidas = df_iteracoes["variavel_excluida"].values
+
+        sem_resultados_validos = melhor_cluster == {} or melhor_cluster.empty
+        print("aaaaaaaaaaaaaaaaaaaaaa-->",sem_resultados_validos)
+        nome_melhor_cluster = melhor_cluster["arranjo"] if not sem_resultados_validos else "Sem resultados válidos"
+        silhueta_media = melhor_cluster["silhueta_media"] if not sem_resultados_validos else 0.0
+
+        # tabela de variaveis
+        rotulos = melhor_cluster["rotulos"] if not sem_resultados_validos else []
+        tabela_variaveis_grupos = gerar_tabela_variaveis_grupo(df,
+                                                               rotulos,
+                                                               colunas_excluidas)
+
+        # tabela de resultados
+        tabela_resultados = gerar_tabela_resultado(df,
+                                                   rotulos,
+                                                   colunas_excluidas)
 
         # Gráfico das silhuetas
         grafico_silhueta = gerar_grafico_silhueta(melhor_cluster)
@@ -185,24 +209,6 @@ def configurar_callbacks(app):
         # Gráfico de comparação de silhueta
         grafico_comparacao = gerar_grafico_comparacao(resultados)
 
-        # Gráfico da entropia
-        grafico_entropia = gerar_grafico_entropia(df_variaveis)
-
-        # tabela de iteracoes
-        df_iteracoes = pd.DataFrame(sumario_iteracoes)
-        tabela_iteracoes = gerar_tabela_colunas(df_iteracoes, df.columns)
-
-        colunas_excluidas = []
-        if len(df_iteracoes)>0:
-            colunas_excluidas =  df_iteracoes["variavel_excluida"].values
-        # tabela de resultados
-        tabela_resultados = gerar_tabela_resultado(df,
-                                                   melhor_cluster["rotulos"],
-                                                  colunas_excluidas)
-        # tabela de variaveis
-        tabela_variaveis_grupos = gerar_tabela_variaveis_grupo(df,
-                                                               melhor_cluster["rotulos"],
-                                                               colunas_excluidas)
         return (nome_melhor_cluster,
                 iteracoes,
                 len(variaveis_restantes),
@@ -217,7 +223,8 @@ def configurar_callbacks(app):
                 tabela_variaveis_grupos,
                 resultados,
                 melhor_cluster,
-                df_iteracoes.to_json(date_format='iso', orient='split'))
+                df_iteracoes.to_json(date_format='iso', orient='split'),
+                sem_resultados_validos)
 
     @app.callback(
         Output("cluster-graph", "figure", allow_duplicate=True),
@@ -261,10 +268,9 @@ def configurar_callbacks(app):
          Input('dataset-iteracoes', 'data')
          ], prevent_initial_call=True
     )
-    def fazer_download_anova(n_clicks, dados_originais, dados_melhor_arranjo,dados_iteracoes):
+    def fazer_download_anova(n_clicks, dados_originais, dados_melhor_arranjo, dados_iteracoes):
         if n_clicks <= 0:
             return None, None
-
 
         df_original = pd.read_json(io.StringIO(dados_originais), orient='split')
         df_classficacao = df_original.copy()
@@ -273,7 +279,7 @@ def configurar_callbacks(app):
 
         df_classficacao["grupo"] = pd.Series(dados_melhor_arranjo["rotulos"])
 
-        df_iteracoes=pd.read_json(io.StringIO(dados_iteracoes), orient='split')
+        df_iteracoes = pd.read_json(io.StringIO(dados_iteracoes), orient='split')
 
         colunas_excluidas = df_iteracoes["variavel_excluida"].values
         novo_df_arquivo = df_classficacao.drop(colunas_excluidas, axis=1)
@@ -307,8 +313,8 @@ def gerar_grafico_entropia(df):
 
 
 def gerar_tabela_colunas(df_iteracoes, lista_colunas_df):
-    lista_colunas_excluidas=[]
-    if len(df_iteracoes) >0:
+    lista_colunas_excluidas = []
+    if len(df_iteracoes) > 0:
         lista_colunas_excluidas = df_iteracoes["variavel_excluida"].values
 
     itens_lista = []
@@ -354,6 +360,9 @@ def gerar_tabela_colunas(df_iteracoes, lista_colunas_df):
 
 
 def gerar_grafico_silhueta(cluster):
+    if cluster == {}:
+        return None
+
     dados = zip(
         cluster["rotulos"],
         cluster["silhuetas"])
@@ -377,6 +386,9 @@ def gerar_grafico_silhueta(cluster):
 
 
 def gerar_grafico_agrupamento(cluster):
+    if cluster == {}:
+        return None
+
     resumo = pd.DataFrame(cluster["resumo_classificacao"])
     resumo["nome_grupo"] = "G" + (resumo["grupo"]).astype(str)
     fig = px.treemap(resumo, path=["nome_grupo"], values="qtd")
